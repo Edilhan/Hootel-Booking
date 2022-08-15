@@ -46,7 +46,6 @@ class User(AbstractUser):
     username = models.CharField(max_length=150)
     activation_code = models.CharField(max_length=8, blank=True)
     phone = models.IntegerField()
-    name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
     gender = models.TextChoices(choices=GenderChoises)
 
