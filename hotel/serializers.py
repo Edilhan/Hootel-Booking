@@ -35,7 +35,6 @@ class RoomSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-
 class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking

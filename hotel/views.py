@@ -1,7 +1,3 @@
-from audioop import ratecv
-from cgitb import reset
-from genericpath import exists
-from webbrowser import get
 from django.shortcuts import get_object_or_404
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework import mixins
@@ -24,7 +20,29 @@ class HotelViewSet(ModelViewSet):
         return context
 
 class RoomViewSet(ModelViewSet):
-    queryset = Hotel
+    queryset = Room.objects.all()
+    serializer_class = RoomSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["request"] = self.request
+        return context
+
+
+class BookingViewSet(ModelViewSet):
+    queryset = Booking.objects.all()
+    serializer_class = BookingSerializer
+    permission_classes = [IsAuthenticated, IsAuthor]
+
+    def create(self, request, *args, **kwargs):
+        if Room.objects.filter(room_number=request.room_number).exists():
+            room = Room.objects.get(room_number=request.room_number)
+            room.status = '2'
+            room.save()
+
+        return super().create(request, *args, **kwargs)
+
 
 class CommentViewSet(mixins.CreateModelMixin,
                     mixins.UpdateModelMixin,
@@ -40,6 +58,7 @@ class CommentViewSet(mixins.CreateModelMixin,
         return context
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def toggle_like(request, h_code):
     user = request.user
     hotel = get_object_or_404(Hotel, hotel_code=h_code)

@@ -41,15 +41,14 @@ class UserManager(BaseUserManager):
         return user
 
 
+
 class User(AbstractUser):
     email = models.EmailField(max_length=150, unique=True)
-    username = models.CharField(max_length=150)
-    activation_code = models.CharField(max_length=8, blank=True)
-    phone = models.IntegerField()
+    first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=30)
+    activation_code = models.CharField(max_length=8, blank=True)
+    phone_number = models.IntegerField()
     gender = models.CharField(max_length=1,choices=GenderChoises)
-
-
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []

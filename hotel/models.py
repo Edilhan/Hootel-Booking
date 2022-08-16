@@ -11,6 +11,11 @@ ROOM_TYPE_CHOICES = []
 
 ROOM_OCCUPANCY_CHOICES = []
 
+ROOM_STATUS = [
+    ("1", "available"), 
+    ("2", "not available")
+]
+    
 class Hotel(models.Model):
     hotel_code = models.IntegerField(primary_key=True)
     name = models.CharField(max_length=150)
@@ -26,6 +31,7 @@ class Room(models.Model):
     room_number = models.IntegerField(primary_key=True)
     image = models.ImageField(upload_to='rooms', blank=True, null=True)
     room_type = models.CharField(max_length=100, choices=ROOM_TYPE_CHOICES)
+    status = models.CharField(choices=ROOM_STATUS, max_length=15)
     hotel = models.ForeignKey(Hotel, related_name='rooms', on_delete=models.CASCADE)
     max_occupancy = models.IntegerField(choices=ROOM_OCCUPANCY_CHOICES)
     
