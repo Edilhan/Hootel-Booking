@@ -1,5 +1,6 @@
 from django.db import models
 
+
 from account.models import User
 
 CITY_CHOICES = [
@@ -58,3 +59,49 @@ class Rating(models.Model):
     hotel = models.ForeignKey(Hotel, related_name='ratings', on_delete=models.CASCADE)
     value = models.IntegerField(choices=[(1,1), (2,2), (3,3), (4,4), (5,5)])
 
+class Favorite(models.Model):
+    user = models.ForeignKey(User, related_name='favorites', on_delete=models.CASCADE)
+    room = models.ForeignKey(Room, related_name='favorites', on_delete=models.CASCADE)
+    favorited = models.BooleanField(default=False)  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# class Favorite(models.Model):
+#     user = models.ForeignKey(User)
+#     content_type = models.ForeignKey(ContentType)
+#     object_id = models.PositiveIntegerField()
+#     content_object = generic.GenericForeignKey('content_type', 'object_id')
+
+#     created_on = models.DateTimeField(auto_now_add=True)
+    
+#     objects = FavoriteManager()
+
+#     class Meta:
+#         verbose_name = _('favorite')
+#         verbose_name_plural = _('favorites')
+#         unique_together = (('user', 'content_type', 'object_id'),)
+    
+#     def __unicode__(self):
+#         return "%s likes %s" % (self.user, self.content_object)
