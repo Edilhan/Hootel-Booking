@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
-from rest_framework import mixins
+from rest_framework import mixins, filters
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
@@ -15,6 +15,8 @@ class HotelViewSet(ModelViewSet):
     queryset = Hotel.objects.all()
     serializer_class = HotelSerializer
     permission_classes = [IsAdminOrReadOnly]
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['name',]
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -41,13 +43,6 @@ class HotelViewSet(ModelViewSet):
         serializer = HotelSerializer(queryset, many=True, context={"request":request})
         return Response(serializer.data, 200)
 
-    @action(methods=["GET"], detail=False)
-    def order_by_price(self, request):
-        queryset = self.get_queryset()
-
-        queryset = sorted(queryset, key=lambda hotel: hotel.price, reverse=True)
-        serializer = HotelSerializer(queryset, many=True, context={"request":request})
-        return Response(serializer.data, 200)
 
 class RoomViewSet(mixins.CreateModelMixin,
                 mixins.UpdateModelMixin,
@@ -56,6 +51,8 @@ class RoomViewSet(mixins.CreateModelMixin,
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
     permission_classes = [IsAdminOrReadOnly]
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['price',]
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -67,6 +64,9 @@ class BookingViewSet(ModelViewSet):
     queryset = Booking.objects.all()
     serializer_class = BookingSerializer
     permission_classes = [IsAuthenticated, IsAuthor]
+
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
 
 
 class CommentViewSet(mixins.CreateModelMixin,
@@ -86,7 +86,7 @@ class CommentViewSet(mixins.CreateModelMixin,
 @permission_classes([IsAuthenticated])
 def toggle_like(request, r_id):
     user = request.user
-    room = get_object_or_404(Room, room_id=r_id)
+    room = get_object_or_404(Room, id=r_id)
 
     if Like.objects.filter(user=user, room=room).exists():
         Like.objects.filter(user=user, room=room).delete()

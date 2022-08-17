@@ -8,13 +8,12 @@ class HotelSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def to_representation(self, instance):
+        request = self.context['request']
         rep = super().to_representation(instance)
-        rep["rooms"] = RoomSerializer(instance.rooms.all(), many=True).data
+        rep["rooms"] = RoomSerializer(instance.rooms.all(), many=True, context={'request': request}).data
         rep["rating"] = instance.average_rating
         rep["user_rating"] = 0
-
-        request = self.context.get("request")
-
+        
         if request.user.is_authenticated:
             if Rating.objects.filter(user=request.user, hotel=instance).exists():
                 rating = Rating.objects.get(user=request.user, hotel=instance)
@@ -49,6 +48,7 @@ class RoomSerializer(serializers.ModelSerializer):
         rep["liked_by_user"] = False
         rep["favorites"] = instance.favorites.all().count()
         rep["added_to_favorites"] = False
+        rep["availability"] = True
 
         request = self.context.get("request")
 
@@ -57,10 +57,14 @@ class RoomSerializer(serializers.ModelSerializer):
             rep["added_to_favorites"] = Favorite.objects.filter(user=request.user, room=instance).exists()
 
         bookings = Booking.objects.filter(room=instance.id)
-        for b in bookings:
-            if b.arrival_time <= datetime.now().time() < b.departure_time:
-                rep["availability"] = False
-
+        from django.utils import timezone
+        now = timezone.now()
+        if bookings:
+            for b in bookings:
+                if b.arrival_datetime <= now < b.departure_datetime:
+                    rep["availability"] = False
+                else:
+                    rep["availability"] = True
         return rep
 
 
