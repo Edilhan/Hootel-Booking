@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
-from .models import Hotel, Room, Booking, Rating, Like, Comment
+from .models import Favorite, Hotel, Room, Booking, Rating, Like, Comment
 from .serializers import HotelSerializer, RoomSerializer, BookingSerializer, CommentSerializer
 from permissions import IsAdminOrReadOnly, IsAuthor
 
@@ -84,14 +84,14 @@ class CommentViewSet(mixins.CreateModelMixin,
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def toggle_like(request, h_code):
+def toggle_like(request, r_id):
     user = request.user
-    hotel = get_object_or_404(Hotel, hotel_code=h_code)
+    room = get_object_or_404(Room, room_id=r_id)
 
-    if Like.objects.filter(user=user, hotel=hotel).exists():
-        Like.objects.filter(user=user, hotel=hotel).delete()
+    if Like.objects.filter(user=user, room=room).exists():
+        Like.objects.filter(user=user, room=room).delete()
     else:
-        Like.objects.create(user=user, hotel=hotel)
+        Like.objects.create(user=user, room=room)
     return Response("Like toggled", 200)
 
 
@@ -114,3 +114,14 @@ def add_rating(request, h_code):
 
     return Response("Rating created", 201)
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def add_to_favorites(request, r_id):
+    user = request.user
+    room = get_object_or_404(Room, id=r_id)
+
+    if Favorite.objects.filter(user=user, room=room).exists():
+        Favorite.objects.filter(user=user, room=room).delete()
+    else:
+        Favorite.objects.create(user=user, room=room)
+    return Response("Added to favorites", 200)

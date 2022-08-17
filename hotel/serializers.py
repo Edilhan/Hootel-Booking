@@ -47,13 +47,16 @@ class RoomSerializer(serializers.ModelSerializer):
         rep["comments"] = CommentSerializer(instance.comments.all(), many=True).data
         rep["likes"] = instance.likes.all().count()
         rep["liked_by_user"] = False
+        rep["favorites"] = instance.favorites.all().count()
+        rep["added_to_favorites"] = False
 
         request = self.context.get("request")
 
         if request.user.is_authenticated:
             rep["liked_by_user"] = Like.objects.filter(user=request.user, room=instance).exists()
+            rep["added_to_favorites"] = Favorite.objects.filter(user=request.user, room=instance).exists()
 
-        bookings = Booking.objects.filter(room=instance.room_id)
+        bookings = Booking.objects.filter(room=instance.id)
         for b in bookings:
             if b.arrival_time <= datetime.now().time() < b.departure_time:
                 rep["availability"] = False

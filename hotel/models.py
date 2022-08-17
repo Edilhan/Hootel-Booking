@@ -65,7 +65,7 @@ class Rating(models.Model):
 class Favorite(models.Model):
     user = models.ForeignKey(User, related_name='favorites', on_delete=models.CASCADE)
     room = models.ForeignKey(Room, related_name='favorites', on_delete=models.CASCADE)
-    favorited = models.BooleanField(default=False)  
+
 
 
 
