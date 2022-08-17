@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Hotel,Room,Booking,Comment, Like, Rating
+from .models import Favorite, Hotel , Room, Booking, Comment, Like, Rating
 from datetime import datetime
 
 class HotelSerializer(serializers.ModelSerializer):
@@ -74,4 +74,10 @@ class BookingSerializer(serializers.ModelSerializer):
         rep =  super().to_representation(instance)
         rep["user"] = instance.user.email
         return rep
-        
+    
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Favorite
+        fields = '__all__'
+    
