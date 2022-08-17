@@ -38,7 +38,7 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser):
     email = models.EmailField(max_length=100, unique=True)
-    username = models.CharField(max_length=30, unique=True)
+    username = models.CharField(max_length=30, unique=True, null=True, blank=True)
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=False)
@@ -48,7 +48,7 @@ class User(AbstractBaseUser):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     activation_code = models.CharField(max_length=8, blank=True)
-    phone_number = models.CharField(max_length=13)
+    phone_number = models.CharField(max_length=13, null=True, blank=True)
    
 
     USERNAME_FIELD = 'email'

@@ -2,8 +2,10 @@ from django.shortcuts import get_object_or_404
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework import mixins
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 from .models import Hotel, Room, Booking, Rating, Like, Comment
 from .serializers import HotelSerializer, RoomSerializer, BookingSerializer, CommentSerializer
@@ -19,7 +21,38 @@ class HotelViewSet(ModelViewSet):
         context["request"] = self.request
         return context
 
-class RoomViewSet(ModelViewSet):
+    @swagger_auto_schema(manual_parameters=[openapi.Parameter('name', openapi.IN_QUERY, 'search hotels by name', type=openapi.TYPE_STRING)])
+
+    @action(methods=['GET'], detail=False)
+    def search(self, request):
+        name = request.query_params.get('name')
+        queryset = self.get_queryset()
+        if name:
+            queryset = queryset.filter(title__icontains=name)
+        
+        serializer = HotelSerializer(queryset, many=True, context={'request':request})
+        return Response(serializer.data, 200)
+
+    @action(methods=["GET"], detail=False)
+    def order_by_rating(self, request):
+        queryset = self.get_queryset()
+
+        queryset = sorted(queryset, key=lambda hotel: hotel.average_rating, reverse=True)
+        serializer = HotelSerializer(queryset, many=True, context={"request":request})
+        return Response(serializer.data, 200)
+
+    @action(methods=["GET"], detail=False)
+    def order_by_price(self, request):
+        queryset = self.get_queryset()
+
+        queryset = sorted(queryset, key=lambda hotel: hotel.price, reverse=True)
+        serializer = HotelSerializer(queryset, many=True, context={"request":request})
+        return Response(serializer.data, 200)
+
+class RoomViewSet(mixins.CreateModelMixin,
+                mixins.UpdateModelMixin,
+                mixins.DestroyModelMixin,
+                GenericViewSet):
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
     permission_classes = [IsAdminOrReadOnly]
@@ -34,14 +67,6 @@ class BookingViewSet(ModelViewSet):
     queryset = Booking.objects.all()
     serializer_class = BookingSerializer
     permission_classes = [IsAuthenticated, IsAuthor]
-
-    def create(self, request, *args, **kwargs):
-        if Room.objects.filter(room_number=request.room_number).exists():
-            room = Room.objects.get(room_number=request.room_number)
-            room.status = '2'
-            room.save()
-
-        return super().create(request, *args, **kwargs)
 
 
 class CommentViewSet(mixins.CreateModelMixin,
@@ -68,6 +93,7 @@ def toggle_like(request, h_code):
     else:
         Like.objects.create(user=user, hotel=hotel)
     return Response("Like toggled", 200)
+
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])

@@ -11,6 +11,6 @@ router.register("booking", BookingViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('toggle_like/<int:p_id>/', toggle_like),
-    path('add_rating/<int:p_id>/', add_rating),
+    path('toggle_like/<int:h_code>/', toggle_like),
+    path('add_rating/<int:h_code>/', add_rating),
 ]
