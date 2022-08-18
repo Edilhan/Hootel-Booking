@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.shortcuts import get_object_or_404
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework import mixins, filters
@@ -6,6 +7,7 @@ from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from django.utils import timezone
 
 from .models import Favorite, Hotel, Room, Booking, Rating, Like, Comment
 from .serializers import HotelSerializer, RoomSerializer, BookingSerializer, CommentSerializer
@@ -63,10 +65,29 @@ class RoomViewSet(mixins.CreateModelMixin,
 class BookingViewSet(ModelViewSet):
     queryset = Booking.objects.all()
     serializer_class = BookingSerializer
-    permission_classes = [IsAuthenticated, IsAuthor]
+    permission_classes = [IsAuthenticatedOrReadOnly, IsAuthor]
+
+    def check_availability(self, rdata):
+        print(rdata['arrival_datetime'])
+        arrival = datetime.strptime(rdata["arrival_datetime"], "%Y-%m-%d %H:%M:%S.%f")
+        departure = datetime.strptime(rdata["departure_datetime"], "%Y-%m-%d %H:%M:%S.%f")
+        bookings = Booking.objects.filter(room=rdata["room"])
+        if bookings:
+            for b in bookings:
+                days1 = frozenset(range(arrival.day, departure.day + 1))
+                days2 = frozenset(range(b.arrival_datetime.day, b.departure_datetime.day + 1))
+                if days1.intersection(days2) and arrival.month == b.arrival_datetime.month and departure.month == b.departure_datetime.month:
+                    raise Exception(f"This room is already booked for days {tuple(days1.intersection(days2))} of month {arrival.month if arrival.month == departure.month else (arrival.month, departure.month)}. Please check another dates")
+        return Response("Room is available for this time")
+        
 
     def create(self, request, *args, **kwargs):
+        self.check_availability(request.data)
         return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        self.check_availability(request.data)
+        return super().update(request, *args, **kwargs)
 
 
 class CommentViewSet(mixins.CreateModelMixin,

@@ -57,11 +57,11 @@ class RoomSerializer(serializers.ModelSerializer):
             rep["added_to_favorites"] = Favorite.objects.filter(user=request.user, room=instance).exists()
 
         bookings = Booking.objects.filter(room=instance.id)
-        from django.utils import timezone
-        now = timezone.now()
         if bookings:
             for b in bookings:
-                if b.arrival_datetime <= now < b.departure_datetime:
+                days = frozenset(range(b.arrival_datetime.day, b.departure_datetime.day + 1))
+                months = frozenset(range(b.arrival_datetime.month, b.departure_datetime.month + 1))
+                if datetime.now().day in days and datetime.now().month in months:
                     rep["availability"] = False
                 else:
                     rep["availability"] = True
